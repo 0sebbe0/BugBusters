@@ -10,6 +10,7 @@ import java.awt.event.ActionListener;
 import java.awt.*;
 
 import com.example.decathlon.deca.*;
+import com.example.decathlon.heptathlon.*;
 
 
 public class MainGUI {
@@ -39,7 +40,9 @@ public class MainGUI {
         String[] disciplines = {
                 "100m", "400m", "1500m", "110m Hurdles",
                 "Long Jump", "High Jump", "Pole Vault",
-                "Discus Throw", "Javelin Throw", "Shot Put"
+                "Discus Throw", "Javelin Throw", "Shot Put",
+                "Hep 100m Hurdles", "Hep High Jump", "Hep Shot Put",
+                "Hep 200m", "Hep Long Jump", "Hep Javelin Throw", "Hep 800m"
         };
         disciplineBox = new JComboBox<>(disciplines);
         panel.add(new JLabel("Select Discipline:"));
@@ -76,48 +79,30 @@ public class MainGUI {
                 double result = Double.parseDouble(resultText);
 
                 int score = 0;
-                switch (discipline) {
-                    case "100m":
-                        Deca100M deca100M = new Deca100M();
-                        score = deca100M.calculateResult(result);
-                        break;
-                    case "400m":
-                        Deca400M deca400M = new Deca400M();
-                        score = deca400M.calculateResult(result);
-                        break;
-                    case "1500m":
-                        Deca1500M deca1500M = new Deca1500M();
-                        score = deca1500M.calculateResult(result);
-                        break;
-                    case "110m Hurdles":
-                        Deca110MHurdles deca110MHurdles = new Deca110MHurdles();
-                        score = deca110MHurdles.calculateResult(result);
-                        break;
-                    case "Long Jump":
-                        DecaLongJump decaLongJump = new DecaLongJump();
-                        score = decaLongJump.calculateResult(result);
-                        break;
-                    case "High Jump":
-                        DecaHighJump decaHighJump = new DecaHighJump();
-                        score = decaHighJump.calculateResult(result);
-                        break;
-                    case "Pole Vault":
-                        DecaPoleVault decaPoleVault = new DecaPoleVault();
-                        score = decaPoleVault.calculateResult(result);
-                        break;
-                    case "Discus Throw":
-                        DecaDiscusThrow decaDiscusThrow = new DecaDiscusThrow();
-                        score = decaDiscusThrow.calculateResult(result);
-                        break;
-                    case "Javelin Throw":
-                        DecaJavelinThrow decaJavelinThrow = new DecaJavelinThrow();
-                        score = decaJavelinThrow.calculateResult(result);
-                        break;
-                    case "Shot Put":
-                        DecaShotPut decaShotPut = new DecaShotPut();
-                        score = decaShotPut.calculateResult(result);
-                        break;
-                }
+                try {
+                    switch (discipline) {
+                    case "100m":            score = new Deca100M().calculateResult(result); break;
+                    case "400m":            score = new Deca400M().calculateResult(result); break;
+                    case "1500m":           score = new Deca1500M().calculateResult(result); break;
+                    case "110m Hurdles":    score = new Deca110MHurdles().calculateResult(result); break;
+                    case "Long Jump":       score = new DecaLongJump().calculateResult(result); break;
+                    case "High Jump":       score = new DecaHighJump().calculateResult(result); break;
+                    case "Pole Vault":      score = new DecaPoleVault().calculateResult(result); break;
+                    case "Discus Throw":    score = new DecaDiscusThrow().calculateResult(result); break;
+                    case "Javelin Throw":   score = new DecaJavelinThrow().calculateResult(result); break;
+                    case "Shot Put":        score = new DecaShotPut().calculateResult(result); break;
+                    case "Hep 100m Hurdles":    score = new Hep100MHurdles().calculateResult(result); break;
+                    case "Hep High Jump":       score = new HeptHightJump().calculateResult(result); break;
+                    case "Hep Shot Put":        score = new HeptShotPut().calculateResult(result); break;
+                    case "Hep 200m":            score = new Hep200M().calculateResult(result); break;
+                    case "Hep Long Jump":       score = new HeptLongJump().calculateResult(result); break;
+                    case "Hep Javelin Throw":   score = new HeptJavelinThrow().calculateResult(result); break;
+                    case "Hep 800m":            score = new Hep800M().calculateResult(result); break;
+                    }
+                }catch (InvalidResultException ex) {
+                JOptionPane.showMessageDialog(null, ex.getMessage(), "Invalid Result", JOptionPane.ERROR_MESSAGE);
+                return;
+            }
 
                 outputArea.append("Competitor: " + name + "\n");
                 outputArea.append("Discipline: " + discipline + "\n");
