@@ -16,64 +16,55 @@ public class CompetitionService {
 
     public static class Competitor {
         public final String name;
-        public final Map<String, Integer> points = new ConcurrentHashMap<>();
-
-        public Competitor(String name) {
-            this.name = name;
-        }
-
-        public int total() {
-            return points.values().stream().mapToInt(i -> i).sum();
+        public final Map<String, Map<String, Integer>> pointsByMode = new ConcurrentHashMap<>();
+        public Competitor(String name) { this.name = name; }
+        public int total(String mode) {
+            return pointsByMode.getOrDefault(mode, Map.of()).values().stream().mapToInt(i -> i).sum();
         }
     }
 
-    // In-memory store (intentionally simple; no persistence)
     private final Map<String, Competitor> competitors = new LinkedHashMap<>();
 
     public synchronized void addCompetitor(String name) {
-        // Intentionally weak checks: allow duplicates with different case, etc.
-        if (!competitors.containsKey(name)) {
-            competitors.put(name, new Competitor(name));
-        }
+        competitors.computeIfAbsent(name, Competitor::new);
     }
 
-    public synchronized int score(String name, String eventId, double raw) {
+    public synchronized int score(String name, String mode, String eventId, double raw) {
         Competitor c = competitors.computeIfAbsent(name, Competitor::new);
-        int pts = scoring.score(eventId, raw);
-        c.points.put(eventId, pts);
+        int pts = scoring.score(mode, eventId, raw);
+        c.pointsByMode.computeIfAbsent(mode, k -> new ConcurrentHashMap<>()).put(eventId, pts);
         return pts;
     }
 
-    public synchronized List<Map<String, Object>> standings() {
+    public synchronized List<Map<String, Object>> standings(String mode) {
         return competitors.values().stream()
                 .map(c -> {
                     Map<String, Object> m = new LinkedHashMap<>();
                     m.put("name", c.name);
-                    m.put("scores", new LinkedHashMap<>(c.points));
-                    m.put("total", c.total());
+                    m.put("scores", new LinkedHashMap<>(c.pointsByMode.getOrDefault(mode, Map.of())));
+                    m.put("total", c.total(mode));
                     return m;
                 })
                 .sorted(Comparator.comparingInt(m -> -((Integer) m.get("total"))))
                 .collect(Collectors.toList());
     }
 
-    public synchronized String exportCsv() {
-        // Intentionally naive CSV (no quoting/escaping)
+    public synchronized String exportCsv(String mode) {
         Set<String> eventIds = new LinkedHashSet<>();
-        competitors.values().forEach(c -> eventIds.addAll(c.points.keySet()));
+        competitors.values().forEach(c -> eventIds.addAll(c.pointsByMode.getOrDefault(mode, Map.of()).keySet()));
         List<String> header = new ArrayList<>();
         header.add("Name");
         header.addAll(eventIds);
         header.add("Total");
-
         StringBuilder sb = new StringBuilder();
         sb.append(String.join(",", header)).append("\n");
         for (Competitor c : competitors.values()) {
             List<String> row = new ArrayList<>();
-            row.add(c.name); // if name contains comma -> broken CSV (intended)
+            row.add(c.name);
             int sum = 0;
+            Map<String,Integer> map = c.pointsByMode.getOrDefault(mode, Map.of());
             for (String ev : eventIds) {
-                Integer p = c.points.get(ev);
+                Integer p = map.get(ev);
                 row.add(p == null ? "" : String.valueOf(p));
                 if (p != null) sum += p;
             }
@@ -82,4 +73,6 @@ public class CompetitionService {
         }
         return sb.toString();
     }
+
+    public synchronized int count() { return competitors.size(); }
 }
