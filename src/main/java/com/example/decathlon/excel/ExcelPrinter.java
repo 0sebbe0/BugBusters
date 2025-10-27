@@ -1,5 +1,6 @@
 package com.example.decathlon.excel;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
@@ -7,7 +8,6 @@ import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
-
 
 public class ExcelPrinter {
 
@@ -20,38 +20,42 @@ public class ExcelPrinter {
 	}
 
 	public void add(Object[][] data, String sheetName) {
-
 		XSSFSheet sheet = workbook.createSheet(sheetName);
-
 		int rowCount = 0;
-
 		for (Object[] aBook : data) {
-			Row row = sheet.createRow(rowCount);
-			rowCount++;
+			Row row = sheet.createRow(rowCount++);
 			int columnCount = 0;
-
 			for (Object field : aBook) {
-				Cell cell = row.createCell(columnCount);
-				columnCount++;
-				
+				Cell cell = row.createCell(columnCount++);
 				if (field instanceof String) {
 					cell.setCellValue((String) field);
-					
 				} else if (field instanceof Integer) {
 					cell.setCellValue((Integer) field);
-					
 				} else if (field instanceof Double) {
 					cell.setCellValue((Double) field);
-					
+				} else if (field != null) {
+					cell.setCellValue(field.toString());
 				}
+			}
+		}
+		if (data.length > 0) {
+			for (int i = 0; i < data[0].length; i++) {
+				sheet.autoSizeColumn(i);
 			}
 		}
 	}
 
 	public void write() throws IOException {
-		FileOutputStream out = new FileOutputStream("C:/Eclipse/resultat_" + excelName + ".xlsx");
-		workbook.write(out);
+		try (FileOutputStream out = new FileOutputStream("C:/Eclipse/resultat_" + excelName + ".xlsx")) {
+			workbook.write(out);
+		}
 		workbook.close();
 	}
 
+	public void write(File file) throws IOException {
+		try (FileOutputStream out = new FileOutputStream(file)) {
+			workbook.write(out);
+		}
+		workbook.close();
+	}
 }

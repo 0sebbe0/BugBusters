@@ -2,6 +2,7 @@ package com.example.decathlon.deca;
 
 import com.example.decathlon.common.CalcTrackAndField;
 import com.example.decathlon.common.InputResult;
+import com.example.decathlon.common.InvalidResultException;
 
 public class Deca110MHurdles {
 

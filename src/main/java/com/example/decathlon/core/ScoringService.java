@@ -32,10 +32,47 @@ public class ScoringService {
             Map.entry("800m", new EventDef("800m", Type.TRACK, 0.11193, 254.0, 1.88, "s"))
     );
 
+    // Exakta gränser (inkl. dec & hep)
+    private final Map<String, double[]> decLimits = Map.ofEntries(
+            Map.entry("100m",        new double[]{5,   20}),
+            Map.entry("110mHurdles", new double[]{10,  30}),
+            Map.entry("400m",        new double[]{20, 100}),
+            Map.entry("1500m",       new double[]{150, 400}),
+            Map.entry("discus",      new double[]{0,   85}),
+            Map.entry("highJump",    new double[]{0,   300}),
+            Map.entry("javelin",     new double[]{0,   110}),
+            Map.entry("longJump",    new double[]{0,   1000}),
+            Map.entry("poleVault",   new double[]{0,   1000}),
+            Map.entry("shotPut",     new double[]{0,   30})
+    );
+
+    private final Map<String, double[]> hepLimits = Map.ofEntries(
+            Map.entry("100mHurdles", new double[]{10, 30}),
+            Map.entry("200m",        new double[]{20, 100}),
+            Map.entry("800m",        new double[]{70, 250}),
+            Map.entry("highJump",    new double[]{0,  300}),
+            Map.entry("javelin",     new double[]{0,  110}),
+            Map.entry("longJump",    new double[]{0,  1000}),
+            Map.entry("shotPut",     new double[]{0,  30})
+    );
+
+    private void validate(String mode, String eventId, double raw) {
+        Map<String, double[]> limits = "HEP".equals(mode) ? hepLimits : decLimits;
+        double[] lm = limits.get(eventId);
+        if (lm != null) {
+            double lo = lm[0], hi = lm[1];
+            if (raw < lo) throw new IllegalArgumentException("Value too low");
+            if (raw > hi) throw new IllegalArgumentException("Value too high");
+        }
+    }
+
     public int score(String mode, String eventId, double raw) {
         Map<String, EventDef> m = "HEP".equals(mode) ? hep : dec;
         EventDef e = m.get(eventId);
         if (e == null) return 0;
+
+        validate(mode, eventId, raw);
+
         double points;
         if (e.type == Type.TRACK) {
             double x = e.B - raw;
@@ -46,6 +83,6 @@ public class ScoringService {
             if (x <= 0) return 0;
             points = e.A * Math.pow(x, e.C);
         }
-        return (int)Math.floor(points);
+        return (int) Math.floor(points);
     }
 }

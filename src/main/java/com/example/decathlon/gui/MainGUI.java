@@ -3,8 +3,12 @@ package com.example.decathlon.gui;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.io.File;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.*;
+
+import com.example.decathlon.common.InvalidResultException;
 import com.example.decathlon.deca.*;
 import com.example.decathlon.heptathlon.*;
 import com.example.decathlon.excel.ExcelPrinter;
@@ -71,8 +75,16 @@ public class MainGUI {
             ExcelPrinter printer = new ExcelPrinter("standings");
             Object[][] data = buildData();
             printer.add(data, "Results");
-            printer.write();
-            JOptionPane.showMessageDialog(null, "Exported to Excel.");
+            JFileChooser chooser = new JFileChooser();
+            String ts = new SimpleDateFormat("yyyyMMdd_HHmm").format(new Date());
+            chooser.setSelectedFile(new File("resultat_standings_" + ts + ".xlsx"));
+            int r = chooser.showSaveDialog(null);
+            if (r == JFileChooser.APPROVE_OPTION) {
+                File file = chooser.getSelectedFile();
+                String path = file.getAbsolutePath().toLowerCase().endsWith(".xlsx") ? file.getAbsolutePath() : file.getAbsolutePath() + ".xlsx";
+                printer.write(new File(path));
+                JOptionPane.showMessageDialog(null, "Exported to " + path + ".");
+            }
         } catch (IOException ex) {
             JOptionPane.showMessageDialog(null, "Export failed: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
         }

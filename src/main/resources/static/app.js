@@ -79,17 +79,25 @@ el('add').addEventListener('click', async () => {
 });
 
 el('save').addEventListener('click', async () => {
+  const val = el('raw').value.replace(',', '.');
+  const raw = parseFloat(val);
+  if (Number.isNaN(raw)) { setError('Please enter a number'); return; }
   const body = {
     name: el('name2').value,
     mode: currentMode(),
     event: el('event').value,
-    raw: parseFloat(el('raw').value)
+    raw
   };
   try {
     const res = await fetch('/api/score', {
       method: 'POST', headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body)
     });
+    if (!res.ok) {
+      const t = await res.text();
+      setError(t || 'Invalid value');
+      return;
+    }
     const json = await res.json();
     setMsg(`Saved: ${json.points} pts`);
     setError('');
@@ -98,6 +106,7 @@ el('save').addEventListener('click', async () => {
     setError('Score failed');
   }
 });
+
 
 let sortBroken = false;
 
